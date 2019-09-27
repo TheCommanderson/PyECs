@@ -1,4 +1,4 @@
-from .ECCurve import ECCurve
+from ECCurve import ECCurve
 class ECPoint:
     def __init__(self, graph, x, y):
         assert(isinstance(x, int) or isinstance(x, float)), "x must be a real number"
