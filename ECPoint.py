@@ -1,4 +1,4 @@
-from ECCurve import ECCurve
+from .ECCurve import ECCurve
 class ECPoint:
     def __init__(self, graph, x, y):
         assert(isinstance(x, int) or isinstance(x, float)), "x must be a real number"
@@ -23,6 +23,7 @@ class ECPoint:
     ne
     neg
     add
+    str
     '''
     def __eq__(self, p2):
         return (self.x == p2.x) and (self.y == p2.y) and (self.graph == p2.graph)
@@ -47,3 +48,5 @@ class ECPoint:
         x3 = lbda**2 - g.a - self.x - p2.x
         y3 = (-lbda*x3)-nu
         return ECPoint(g, x3, y3)
+    def __str__(self):
+        return '(' + str(self.x) + ', ' + str(self.y) + ')'
