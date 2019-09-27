@@ -1,4 +1,4 @@
 import sys
 sys.path.append("/PyECs")
-from .ECPoint import ECPoint
-from .ECCurve import ECCurve
+from .ECBase import ECPoint
+from .ECBase import ECCurve
