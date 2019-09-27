@@ -1,4 +1,12 @@
-from .ECCurve import ECCurve
+class ECCurve:
+    def __init__(self, a, b, c):
+        self.a = a
+        self.b = b
+        self.c = c
+
+    def __eq__(self, g2):
+        return (self.a == g2.a) and (self.b == g2.b) and (self.c == g2.c)
+        
 class ECPoint:
     def __init__(self, graph, x, y):
         assert(isinstance(x, int) or isinstance(x, float)), "x must be a real number"
@@ -7,16 +15,6 @@ class ECPoint:
         self.graph = graph
         self.x = x
         self.y = y
-    '''
-    D U P
-    '''
-    def dup(self):
-        g = self.graph
-        x_top = self.x**4 - (2*g.b*(self.x**2)) - (8*g.c*self.x) + g.b**2 - (4*g.a*g.c)
-        x_bot = 4*(self.x**3 + (g.a*self.x**2) + g.b*self.x + g.c)
-        x3 = x_top/x_bot
-        y3 = -(self.x**6)-(20*g.c*(self.x**3)+(8*(g.c**2)))/(8*(self.y**3))
-        return ECPoint(g, x3, y3)
     '''
     'Magic Method' Overloads Supported:
     eq
@@ -34,19 +32,17 @@ class ECPoint:
     def __add__(self, p2):
         assert(self.graph == p2.graph), "Cannot add points on different graphs"
         g = self.graph
-        if self == p2: # CASE p1 == p2
-            return self.dup()
-        elif self.x == p2.x: # CASE x1 == x2, use modified lambda and nu
+        if self.x == p2.x: # CASE x1 == x2, use modified lambda and nu
             lbda = (3*(self.x)**2) + (2*g.a*self.x) + g.b
             lbda /= 2*self.y
             nu = (-self.x)**3 + (g.b*self.x) + (2*g.c)
             nu /= 2*self.y
         else: # CASE points are different
-            lbda =  (p2.y - self.y)/(p2.y - self.y)
+            lbda =  (p2.y - self.y)/(p2.x - self.x)
             nu = self.y - (lbda*self.x)
 
         x3 = lbda**2 - g.a - self.x - p2.x
         y3 = (-lbda*x3)-nu
-        return ECPoint(g, x3, y3)
+        return ECPoint(g, round(x3, 7), round(y3, 7))
     def __str__(self):
         return '(' + str(self.x) + ', ' + str(self.y) + ')'
