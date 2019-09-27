@@ -1,2 +1,2 @@
 # PyECs
-Python Module for Simple Elliptic Curve Manipulation
+## Python Module for Simple Elliptic Curve Manipulation
