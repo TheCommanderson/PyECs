@@ -8,7 +8,8 @@ from math import sqrt
 from numpy import roots, isreal
 
 def finitePoints(C):
-    assert(isinstance(C, ECCurve)), "Argument must be of type ECCurve"
+    if not isinstance(C, ECCurve):
+        raise TypeError("finitePoints() accepts ECCurve as argument type.")
     points = set()
     y_list = [0]
     for i in range(1, round(sqrt(abs(C.disc)))):
@@ -33,6 +34,8 @@ class ECCurve:
         self.disc = (-4*(a**3)*c) + (a**2*b**2) + (18*a*b*c) - (4*(b**3)) - (27*c**2)
     def __eq__(self, g2):
         return (self.a == g2.a) and (self.b == g2.b) and (self.c == g2.c)
+    def __repr__(self):
+        return "ECCurve"
 
 class ECPoint:
     def __init__(self, graph, x, y):
@@ -53,6 +56,7 @@ class ECPoint:
     hash - this object is hashable
     '''
     def __eq__(self, p2):
+        assert(isinstance(p2, ECPoint)), ""
         return (self.x == p2.x) and (self.y == p2.y) and (self.graph == p2.graph)
     def __ne__(self, p2):
         return not self == p2
@@ -73,9 +77,17 @@ class ECPoint:
         x3 = lbda**2 - g.a - self.x - p2.x
         y3 = (-lbda*x3)-nu
         return ECPoint(g, round(x3, 8), round(y3, 8)) # round to 8 because of small computational error from python
+    def __iadd__(self, p2):
+        return self + p2
     def __sub__(self, p2):
         return self + -p2
     def __str__(self):
         return '(' + str(self.x) + ', ' + str(self.y) + ')'
     def __hash__(self):
         return (53*hash(self.x)) + (53*hash(self.y))
+    def __mul__(self, n):
+        assert(isinstance(n, int) or instance(n, float)), "ECPoints only support scalar multiplication"
+        tmp = ECPoint(self.graph, self.x, self.y)
+        for i in range(1, n):
+            tmp = tmp + self
+        return tmp
