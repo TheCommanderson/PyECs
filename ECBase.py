@@ -1,12 +1,15 @@
+from math import sqrt
+from numpy import roots, isreal
+
+class CurveError(Exception):
+    pass
+
 '''
 FUNCTION finitePoints
 arguments - C (ECCurve)
 returns - points (list[ECPoints]), a list of all the finite points on the curve C,
-or an empty list if no finite points exist on the graph
+or an empty list if no finite points exist on the curve
 '''
-from math import sqrt
-from numpy import roots, isreal
-
 def finitePoints(C):
     if not isinstance(C, ECCurve):
         raise TypeError("finitePoints() accepts ECCurve as argument type.")
@@ -25,6 +28,9 @@ def finitePoints(C):
                     points.add(ECPoint(C, x, y))
                     points.add(ECPoint(C, x, -y))
     return list(points)
+    
+def is_on_curve(C, p):
+    return True
 
 class ECCurve:
     def __init__(self, a, b, c):
@@ -38,33 +44,34 @@ class ECCurve:
         return "ECCurve"
 
 class ECPoint:
-    def __init__(self, graph, x, y):
-        assert(isinstance(x, int) or isinstance(x, float)), "x must be a real number"
-        assert(isinstance(y, int) or isinstance(y, float)), "y must be a real number"
-        assert(isinstance(graph, ECCurve)), "graph must be of type ECCurve"
-        self.graph = graph
+    def __init__(self, curve, x, y):
+
+        x_good = isinstance(x, int) or isinstance(x, float)
+        y_good = isinstance(y, int) or isinstance(y, float)
+        if not (x_good and y_good):
+            raise TypeError("x and y must be numbers.")
+        if not isinstance(curve, ECCurve):
+            raise TypeError("curve must be of type ECCurve")
+        self.curve = curve
         self.x = x
         self.y = y
+        if not is_on_curve(self, curve):
+            raise CurveError("Specified points x and y are not a solution to the curve provided.")
     '''
     'Magic Method' Overloads Supported:
-    eq
-    ne
-    neg
-    add
-    sub
-    str
-    hash - this object is hashable
+        eq, ne, neg, add, sub, str, hash, iadd, mul
     '''
     def __eq__(self, p2):
         assert(isinstance(p2, ECPoint)), ""
-        return (self.x == p2.x) and (self.y == p2.y) and (self.graph == p2.graph)
+        return (self.x == p2.x) and (self.y == p2.y) and (self.curve == p2.curve)
     def __ne__(self, p2):
         return not self == p2
     def __neg__(self):
-        return ECPoint(self.graph, self.x, -self.y)
+        return ECPoint(self.curve, self.x, -self.y)
     def __add__(self, p2):
-        assert(self.graph == p2.graph), "Cannot add points on different graphs"
-        g = self.graph
+        if not self.curve == p2.curve:
+            raise CurveError("Cannot add points on different curves.")
+        g = self.curve
         if self.x == p2.x: # CASE x1 == x2, use modified lambda and nu
             lbda = (3*(self.x)**2) + (2*g.a*self.x) + g.b
             lbda /= 2*self.y
@@ -87,7 +94,7 @@ class ECPoint:
         return (53*hash(self.x)) + (53*hash(self.y))
     def __mul__(self, n):
         assert(isinstance(n, int) or instance(n, float)), "ECPoints only support scalar multiplication"
-        tmp = ECPoint(self.graph, self.x, self.y)
+        tmp = ECPoint(self.curve, self.x, self.y)
         for i in range(1, n):
             tmp = tmp + self
         return tmp
