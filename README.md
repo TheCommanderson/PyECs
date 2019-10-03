@@ -1,5 +1,5 @@
 # PyECs
--- Python Module for Simple Elliptic Curve Manipulation --
+-- Python Module for Simple Elliptic Curve Manipulation --  
 PyECs is primarily designed for educational purposes regarding elliptic curves and elliptic curve cryptography.  Current functionality revolves around addition and scalar multiplication of points on elliptic curves in projective space.  Future work will include more support for elliptic curve cryptographic functions and support for elliptic curves over different number sets (complex, real, etc.)
 ### Dependencies
 - numpy
