@@ -1,17 +1,13 @@
 from math import sqrt
-from numpy import roots, isreal
+from numpy import roots, isreal, inf
 from fractions import Fraction
 
+# Error to throw for illegal use of elliptic curves
 class CurveError(Exception):
     pass
 
-'''
-FUNCTION finitePoints
-arguments - C (ECCurve)
-returns - points (list[ECPoints]), a list of all the finite points on the curve C,
-or an empty list if no finite points exist on the curve
-'''
-def finitePoints(C):
+# Returns type list[ECPoint], a list of finite points on the curve C
+def finitePoints(C): # C - an ECCurve
     if not isinstance(C, ECCurve):
         raise TypeError("finitePoints() accepts ECCurve as argument type.")
     points = set()
@@ -30,13 +26,18 @@ def finitePoints(C):
                     points.add(ECPoint(C, x, -y))
     return list(points)
 
-def is_on_curve(p, C):
+# returns boolean, true if ECPoint p is on ECCurve C, else returns false
+def is_on_curve(p, C): # p - an ECPoint, C - an ECCurve
     left = p.y**2
     right = p.x**3 + (C.a * p.x**2) + (C.b * p.x) + C.c
     return left == right
 
-def Qord(p, n):
+# returns type int, the ord of rational number n with regards to prime number p
+def Qord(p, n): # p - a prime number, n - a rational number
     f = Fraction(n)
+    if n == 0: # return inf by convention if n == 0
+        return inf
+
     numerator = f.numerator
     denominator = f.denominator
     n_ord = 0
@@ -48,6 +49,15 @@ def Qord(p, n):
         denominator /= p
         d_ord -= 1
     return n_ord - d_ord
+
+# returns a number, the p-adic absolute value of rational number n with regards
+# to prime number p
+def padicAbs(p, n): # p - a prime number, n - a rational number
+    if n == 0: # return 1 by convention if n == 0
+        return 1
+
+    nu = Qord(p, n)
+    return 1/(p**nu)
 
 class ECCurve:
     def __init__(self, a, b, c):
