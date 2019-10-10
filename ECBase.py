@@ -1,5 +1,6 @@
 from math import sqrt
 from numpy import roots, isreal
+from fractions import Fraction
 
 class CurveError(Exception):
     pass
@@ -28,9 +29,25 @@ def finitePoints(C):
                     points.add(ECPoint(C, x, y))
                     points.add(ECPoint(C, x, -y))
     return list(points)
-    
-def is_on_curve(C, p):
-    return True
+
+def is_on_curve(p, C):
+    left = p.y**2
+    right = p.x**3 + (C.a * p.x**2) + (C.b * p.x) + C.c
+    return left == right
+
+def Qord(p, n):
+    f = Fraction(n)
+    numerator = f.numerator
+    denominator = f.denominator
+    n_ord = 0
+    d_ord = 0
+    while not numerator % p:
+        numerator /= p
+        n_ord += 1
+    while not denominator % p:
+        denominator /= p
+        d_ord -= 1
+    return n_ord - d_ord
 
 class ECCurve:
     def __init__(self, a, b, c):
@@ -38,36 +55,42 @@ class ECCurve:
         self.b = b
         self.c = c
         self.disc = (-4*(a**3)*c) + (a**2*b**2) + (18*a*b*c) - (4*(b**3)) - (27*c**2)
-    def __eq__(self, g2):
-        return (self.a == g2.a) and (self.b == g2.b) and (self.c == g2.c)
+
+    def __eq__(self, c2):
+        if not isinstance(c2, ECCurve):
+            raise TypeError("Cannot compare type ECCurve to type {}".format(type(c2)))
+        return (self.a == c2.a) and (self.b == c2.b) and (self.c == c2.c)
+
     def __repr__(self):
         return "ECCurve"
 
 class ECPoint:
     def __init__(self, curve, x, y):
-
+        # Points must be on the curve and have number x and y values
         x_good = isinstance(x, int) or isinstance(x, float)
         y_good = isinstance(y, int) or isinstance(y, float)
         if not (x_good and y_good):
             raise TypeError("x and y must be numbers.")
         if not isinstance(curve, ECCurve):
             raise TypeError("curve must be of type ECCurve")
+
         self.curve = curve
         self.x = x
         self.y = y
         if not is_on_curve(self, curve):
             raise CurveError("Specified points x and y are not a solution to the curve provided.")
-    '''
-    'Magic Method' Overloads Supported:
-        eq, ne, neg, add, sub, str, hash, iadd, mul
-    '''
+
     def __eq__(self, p2):
-        assert(isinstance(p2, ECPoint)), ""
+        if not isinstance(p2, ECPoint):
+            raise TypeError("Cannot compare type ECPoint to type {}".format(type(p2)))
         return (self.x == p2.x) and (self.y == p2.y) and (self.curve == p2.curve)
+
     def __ne__(self, p2):
         return not self == p2
+
     def __neg__(self):
         return ECPoint(self.curve, self.x, -self.y)
+
     def __add__(self, p2):
         if not self.curve == p2.curve:
             raise CurveError("Cannot add points on different curves.")
@@ -83,17 +106,23 @@ class ECPoint:
 
         x3 = lbda**2 - g.a - self.x - p2.x
         y3 = (-lbda*x3)-nu
-        return ECPoint(g, round(x3, 8), round(y3, 8)) # round to 8 because of small computational error from python
+        return ECPoint(g, x3, y3)
+
     def __iadd__(self, p2):
         return self + p2
+
     def __sub__(self, p2):
         return self + -p2
+
     def __str__(self):
         return '(' + str(self.x) + ', ' + str(self.y) + ')'
+
     def __hash__(self):
         return (53*hash(self.x)) + (53*hash(self.y))
+
     def __mul__(self, n):
-        assert(isinstance(n, int) or instance(n, float)), "ECPoints only support scalar multiplication"
+        if not (isinstance(n, int) or instance(n, float)):
+            raise TypeError("Cannot multiply ECPoint and {} (is your scalar multiple the second argument?)".format(type(n)))
         tmp = ECPoint(self.curve, self.x, self.y)
         for i in range(1, n):
             tmp = tmp + self
