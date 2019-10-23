@@ -6,8 +6,52 @@ from fractions import Fraction
 class CurveError(Exception):
     pass
 
+# Lazy prime checker function
+def isPrime(x):
+    if x in [2,3]: # 4 was being crappy so I just hardcoded it
+        return True
+    if x == 4:
+        return False
+
+    for i in range(2, math.ceil(math.sqrt(x)) + 1):
+        if not x % i:
+            return False
+    return True
+
+
+def ffSet(C: ECCurve, p: int):
+    if not isPrime(p):
+        print("p not prime.")
+        return set()
+
+        # generate squares
+        squares = dict()
+        for i in range(p):
+            y2 = i**2 % p
+            if y2 not in squares:
+                squares[y2] = [i]
+            else:
+                squares[y2].append(i)
+
+        # generate set C(F_p)
+        cfp = set()
+        for i in range(p):
+           y2 = i**3 + (C.a* i**2) + (C.b * i) + C.c
+           y2 %= p
+           if y2 in squares:
+               for root in squares[y2]:
+                   cfp.add((i, root))
+        error = math.floor(abs(2 * math.sqrt(p)))
+        cfp.append(inf)
+            # checking the Haas theorem applies as a safeguard
+            if not len(cfp)-p-1 >= -error and len(cfp)-p-1 <= error:
+                print("beep boop internal error generating set over finite field.")
+                return set()
+        return cfp
+
+
 # Returns type list[ECPoint], a list of finite points on the curve C
-def finitePoints(C): # C - an ECCurve
+def finitePoints(C: ECCurve): # C - an ECCurve
     if not isinstance(C, ECCurve):
         raise TypeError("finitePoints() accepts ECCurve as argument type.")
     points = set()
